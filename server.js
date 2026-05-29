@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const axios = require('axios');
-const YTDlpWrap = require('yt-dlp-wrap').default;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,43 +25,45 @@ app.post('/api/download', async (req, res) => {
     }
 
     try {
-        const ytDlpWrap = new YTDlpWrap();
-        const stdout = await ytDlpWrap.execPromise([
-            url,
-            '-j',
-            '--no-warnings',
-            '--no-check-certificates',
-            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        ]);
+        const apiResponse = await axios.post('https://api.tikwm.com/api/', 
+            new URLSearchParams({ url: url }),
+            {
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                timeout: 15000
+            }
+        );
 
-        const info = JSON.parse(stdout);
+        const data = apiResponse.data?.data;
 
-        const videoFormat = info.formats?.find(f => 
-            f.vcodec !== 'none' && f.acodec !== 'none' && f.format_note?.includes('watermark') === false
-        ) || info.formats?.find(f => f.vcodec !== 'none' && f.acodec !== 'none') || info.formats?.[0];
-
-        const audioFormat = info.formats?.find(f => 
-            f.acodec !== 'none' && f.vcodec === 'none'
-        ) || info.formats?.[0];
+        if (!data || !data.play) {
+            throw new Error('API returned no video data');
+        }
 
         res.json({
             success: true,
-            title: info.title || info.description || 'TikTok Video',
-            uploader: info.uploader || info.channel || 'Unknown',
-            duration: info.duration ? `${Math.floor(info.duration / 60)}:${(info.duration % 60).toString().padStart(2, '0')}` : '0:00',
-            thumbnail: info.thumbnail || '',
-            views: info.view_count || 0,
-            likes: info.like_count || 0,
-            downloadUrl: videoFormat?.url || '',
-            audioUrl: audioFormat?.url || '',
-            filename: `tiktok_${info.id || Date.now()}.mp4`
+            title: data.title || 'TikTok Video',
+            uploader: data.author?.nickname || data.author?.unique_id || 'Unknown',
+            duration: data.duration ? `${data.duration}s` : '0:00',
+            thumbnail: data.cover || '',
+            views: data.play_count || 0,
+            likes: data.digg_count || 0,
+            downloadUrl: data.play,
+            audioUrl: data.music || data.play,
+            filename: `tiktok_${Date.now()}.mp4`
         });
 
     } catch (err) {
-        console.error('Extraction error:', err.message);
+        console.error('API Error:', err.message);
+        if (err.response) {
+            console.error('Status:', err.response.status);
+            console.error('Data:', err.response.data);
+        }
         res.status(500).json({ 
             success: false, 
-            error: 'Failed to extract video. Check the URL or try updating yt-dlp.' 
+            error: 'Failed to extract video. Try another URL.' 
         });
     }
 });
@@ -76,6 +77,7 @@ app.get('/api/proxy', async (req, res) => {
             method: 'get',
             url: decodeURIComponent(url),
             responseType: 'stream',
+            timeout: 30000,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 'Referer': 'https://www.tiktok.com/'
@@ -85,10 +87,11 @@ app.get('/api/proxy', async (req, res) => {
         res.setHeader('Content-Type', response.headers['content-type'] || 'video/mp4');
         response.data.pipe(res);
     } catch (err) {
+        console.error('Proxy error:', err.message);
         res.status(500).send('Download failed');
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
