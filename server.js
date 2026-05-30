@@ -10,10 +10,23 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// =========================
+// Homepage
+// =========================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// =========================
+// Keep Alive Endpoint (IMPORTANT)
+// =========================
+app.get('/ping', (req, res) => {
+    res.status(200).send('alive');
+});
+
+// =========================
+// TikTok Download API
+// =========================
 app.post('/api/download', async (req, res) => {
     const { url } = req.body;
 
@@ -72,6 +85,9 @@ app.post('/api/download', async (req, res) => {
     }
 });
 
+// =========================
+// Proxy Stream API
+// =========================
 app.get('/api/proxy', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).send('Missing URL');
@@ -97,21 +113,27 @@ app.get('/api/proxy', async (req, res) => {
 });
 
 // =========================
-// 🚀 Keep Alive (Anti Sleep)
+// 🚀 Keep Alive System
 // =========================
-const KEEP_ALIVE_URL = "https://threein1-h2fb.onrender.com";
+const KEEP_ALIVE_URL = "https://threein1-h2fb.onrender.com/ping";
 
 setInterval(async () => {
     try {
-        await axios.get(KEEP_ALIVE_URL);
-        console.log("Keep-alive ping sent ✔");
+        const res = await axios.get(KEEP_ALIVE_URL, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (KeepAliveBot)"
+            }
+        });
+
+        console.log("Keep-alive ✔ status:", res.status);
     } catch (err) {
         console.log("Keep-alive failed ❌", err.message);
     }
-}, 40000);
+}, 60000); // كل دقيقة (أفضل من 40 ثانية)
 
 // =========================
-
+// Start Server
+// =========================
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
