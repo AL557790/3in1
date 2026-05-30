@@ -690,12 +690,11 @@
         </div>
 
         <div class="footer">
-            <p>محمي بحقوق الطبع والنشر © 2026</p>
+            <p>محمي بحقوق الطبع والنشر &copy; 2026</p>
         </div>
 
     </div>
 
-    <!-- Modal مُعدّل -->
     <div id="codeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; padding:20px;">
         <div style="background:#1a1a1a; border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:30px; max-width:500px; width:100%; text-align:center; position:relative;">
             <button onclick="closeCode()" style="position:absolute; top:15px; left:15px; background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">
@@ -706,7 +705,6 @@
             <p style="color:rgba(255,255,255,0.6); margin-bottom:25px; line-height:1.6;">
                 يمكنك الوصول لكود الموقع الكامل عبر زر <strong style="color:#ff0050;">Download</strong>. المشروع مفتوح المصدر ومتاح للجميع.
             </p>
-            <!-- زر Download يحمل ملف LegendDL.zip -->
             <a href="legend-pack/LegendDL.zip" download style="display:inline-block; padding:14px 35px; background:linear-gradient(135deg, #ff0050, #ff6b6b); color:#fff; text-decoration:none; border-radius:50px; font-weight:700; transition:all 0.3s; cursor:pointer;">
                 <i class="fas fa-download" style="margin-left:8px;"></i>
                 Download
@@ -750,7 +748,7 @@
         videoUrl.addEventListener('input', () => {
             const url = videoUrl.value.trim();
             const isValid = url.includes('tiktok.com') && url.length > 15;
-            
+
             if (isValid) {
                 downloadBtn.disabled = false;
                 downloadBtn.style.opacity = '1';
@@ -823,11 +821,11 @@
 
         function downloadFile(type) {
             if (!currentVideoData) return;
-            
+
             const btn = type === 'video' ? downloadVideoBtn : downloadAudioBtn;
             const url = btn.dataset.url;
             const filename = btn.dataset.filename;
-            
+
             if (!url) {
                 showError('الرابط غير متوفر');
                 return;
