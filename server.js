@@ -18,17 +18,18 @@ app.post('/api/download', async (req, res) => {
     const { url } = req.body;
 
     if (!url || (!url.includes('tiktok.com') && !url.includes('vm.tiktok.com'))) {
-        return res.status(400).json({ 
-            success: false, 
-            error: 'Invalid TikTok URL' 
+        return res.status(400).json({
+            success: false,
+            error: 'Invalid TikTok URL'
         });
     }
 
     try {
-        const apiResponse = await axios.post('https://www.tikwm.com/api/', 
+        const apiResponse = await axios.post(
+            'https://www.tikwm.com/api/',
             new URLSearchParams({ url: url }),
             {
-                headers: { 
+                headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Accept': 'application/json'
                 },
@@ -58,13 +59,15 @@ app.post('/api/download', async (req, res) => {
 
     } catch (err) {
         console.error('API Error:', err.message);
+
         if (err.response) {
             console.error('Status:', err.response.status);
             console.error('Data:', JSON.stringify(err.response.data).substring(0, 500));
         }
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to extract video. The URL may be private, invalid, or the API is temporarily down.' 
+
+        res.status(500).json({
+            success: false,
+            error: 'Failed to extract video. The URL may be private, invalid, or the API is temporarily down.'
         });
     }
 });
@@ -72,7 +75,7 @@ app.post('/api/download', async (req, res) => {
 app.get('/api/proxy', async (req, res) => {
     const { url } = req.query;
     if (!url) return res.status(400).send('Missing URL');
-    
+
     try {
         const response = await axios({
             method: 'get',
@@ -84,7 +87,7 @@ app.get('/api/proxy', async (req, res) => {
                 'Referer': 'https://www.tiktok.com/'
             }
         });
-        
+
         res.setHeader('Content-Type', response.headers['content-type'] || 'video/mp4');
         response.data.pipe(res);
     } catch (err) {
@@ -92,6 +95,22 @@ app.get('/api/proxy', async (req, res) => {
         res.status(500).send('Download failed');
     }
 });
+
+// =========================
+// 🚀 Keep Alive (Anti Sleep)
+// =========================
+const KEEP_ALIVE_URL = "https://threein1-h2fb.onrender.com";
+
+setInterval(async () => {
+    try {
+        await axios.get(KEEP_ALIVE_URL);
+        console.log("Keep-alive ping sent ✔");
+    } catch (err) {
+        console.log("Keep-alive failed ❌", err.message);
+    }
+}, 40000);
+
+// =========================
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
